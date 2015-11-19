@@ -3,4 +3,4 @@ A javascript algorithm example for convert long numbers from hexadecimal to base
 
 You can find all the information about how does it work just here: https://blogdelbarba.wordpress.com/2015/11/19/number-base-conversion-from-64-to-58/
 
-If you want to try it, you can also follow <a href="www.googledrive.com/host/0B2K0-wLbBOcyeDFwY2lveWtFSEU">this link</a>
+If you want to try it, you can also follow <a href="http://www.googledrive.com/host/0B2K0-wLbBOcyeDFwY2lveWtFSEU">this link</a>

@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		body {
+			font-family: Verdana;
+			background-color: #d0e4fe;
+		}
+	</style>
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+
+		function convert_input_value() {
+			var val = $('#id_input_addres').val();
+			$('<p> ' + val + ' base 16 = ' + enc64_58(val) + ' base 58</p>').appendTo('body');
+		}
+
+
+		function enc64_58(entrada) {
+			var test_max_val = 0;
+			var ALPHABET_16 = '0123456789ABCDEF';
+			var ALPHABET_58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+			var ALP_16_MAP = {};
+			var array_64 = [];
+			var array_58 = [];
+
+			for (var i = 0; i < ALPHABET_16.length; i++) ALP_16_MAP[ALPHABET_16.charAt(i)] = i; // Ini alphabet map array
+			entrada = entrada.toUpperCase();
+
+			// Conver from hexadecimal to 64 base array
+			for (var t = entrada.length - 1; t >= 0; t = t - 3) {
+
+				if (t > 1) var hex1 = ALP_16_MAP[entrada.charAt(t - 2)]; else var hex1 = 0;
+				if (t > 0) var hex2 = ALP_16_MAP[entrada.charAt(t - 1)]; else var hex2 = 0;
+				var tiple_hex = (hex1 * 256) + (hex2 * 16) + ALP_16_MAP[entrada.charAt(t)];
+
+				var low_val = tiple_hex % 64;	// get the fitst 6 bites
+				var hig_val = tiple_hex >> 6;	// shift 6 bites (2^64)
+
+				array_64.unshift(low_val);
+				if (hig_val > 0 || t > 2) array_64.unshift(hig_val);
+			}
+			array_64.reverse();	// Work with the less significant digit 0, and growing in number more significant
+
+
+			var output_base = 58;
+			for (var base = 63; base >= output_base; base--) {
+
+				// Inicialitzar array de sortida i crear buffers temporals
+				array_58 = []; for (var t = 0; t < array_64.length; t++) array_58.push(0);
+				var buffer_mult = $.extend(true, [], array_58);
+				buffer_mult[0] = 1;	// Setejar multiplicador inicial
+
+				// General bucle to shift each digit
+				for (var cdig = 0; cdig < buffer_mult.length; cdig++) {
+
+					// Iterar matriu de multiplicadors
+					for (var t = cdig; t > 0; t--) buffer_mult[t] += (buffer_mult[t - 1] || 0);
+
+					// Arrosegar resultats
+					for (var t = 0; t < cdig; t++) {
+						if (buffer_mult[t] >= base) {
+							var carry_v = 0;
+							var q = t;
+							do {
+								buffer_mult[q] += carry_v;
+								if (q < cdig - 1) {	// No arrossegar més enllà de l'últim dígit de la iteració general
+									carry_v = Math.floor(buffer_mult[q] / base);
+									buffer_mult[q] %= base;
+								} else { carry_v = 0; }
+								q++;
+							} while (carry_v > 0);
+						}
+					}
+
+					// Multiplicar i acumular nous valors
+					for (var t = 0; t < buffer_mult.length; t++) {
+						var carry_v = buffer_mult[t] * (array_64[cdig] || 0);	// Acumular valors multiplicats
+						var q = t;
+						while (carry_v > 0) {	// Arrossegar resultat cap amunt
+							if (q >= array_58.length) array_58.push(0);
+							array_58[q] += carry_v;
+							carry_v = Math.floor(array_58[q] / base);
+							array_58[q] %= base;
+							q++;
+						}
+					}
+				}
+				array_64 = $.extend(true, [], array_58);
+			}
+
+			array_58.reverse();
+
+			var string_result = '';
+			for (var t = 0; t < array_58.length; t++) string_result += ALPHABET_58.charAt(array_58[t]);
+
+			return string_result;
+		}
+
+
+		function set_random_val(long_bytes) {
+			var res = '';
+
+			for (var t = 0; t < long_bytes; t++) {
+				val_byte = Math.floor(Math.random() * 256);
+				if (val_byte < 16) res += '0';
+				res += val_byte.toString(16);
+			}
+			$('#id_input_addres').val(res);
+		}
+
+	</script>
+
+
+</head>
+
+<body style="width: 100%; height: 100%; ">
+
+	<h1> Convert from Hex to base 58: </h1>
+
+	Input value (hex):
+	<br/>
+	<input 	type="text" id="id_input_addres" maxlength="100" style="width:830px; font-family: monospace;"
+			value="800C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D507A5B8D"/>
+	<button onclick="set_random_val(32);"> Set random value </button>
+	<button onclick="convert_input_value();"> Convert to base 58 </button>
+
+
+</body>
+</html>
